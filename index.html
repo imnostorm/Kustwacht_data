@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <title>Maritiem Dashboard</title>
+    <title>Kustwacht Dashboard</title>
     <style>
         body, html { 
             margin: 0; padding: 0; height: 100vh; width: 100vw;
@@ -15,6 +15,21 @@
             flex-direction: column; 
             height: 100vh; 
             width: 100vw; 
+        }
+
+        header {
+            padding: 10px 20px;
+            background: #050505;
+            border-bottom: 1px solid #222;
+            text-align: left;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 18px;
+            color: #00d4ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
         
         .monitor-layout { 
@@ -47,6 +62,8 @@
             border-radius: 4px; 
             overflow: hidden;
             border: 1px solid #222;
+            display: flex;
+            flex-direction: column;
         }
 
         .slot iframe { 
@@ -63,10 +80,13 @@
             background: #000; 
         }
 
+        /* Label aangepast naar relatief zodat het niet over de kaart-tekst valt */
         .label { 
-            position: absolute; top: 0; left: 0; background: rgba(0, 212, 255, 0.85); 
+            background: rgba(0, 212, 255, 0.85); 
             color: #000; padding: 2px 8px; font-size: 10px; font-weight: bold; 
-            z-index: 20; text-transform: uppercase; border-bottom-right-radius: 4px;
+            z-index: 20; text-transform: uppercase;
+            display: inline-block;
+            width: fit-content;
         }
 
         .cam-selector {
@@ -87,7 +107,6 @@
             height: 100%;
         }
 
-        /* Specifieke hoogte voor de KNMI kaarten om ruimte te maken voor Buienradar */
         .knmi-card { height: 25%; }
         .radar-card { height: 45%; }
 
@@ -125,6 +144,10 @@
 <body>
 
 <div class="main-container">
+    <header>
+        <h1>Kustwacht Dashboard</h1>
+    </header>
+
     <div class="monitor-layout">
         <div class="webcam-grid">
             <div class="cam-box">
@@ -146,11 +169,17 @@
         </div>
 
         <div class="info-column">
-            <div class="slot knmi-card"><span class="label">Noordzee</span><img id="knmi-1" src=""></div>
-            <div class="slot knmi-card"><span class="label">Waarschuwingen</span><img id="knmi-2" src=""></div>
+            <div class="slot knmi-card">
+                <span class="label">Noordzee</span>
+                <img id="knmi-1" src="">
+            </div>
+            <div class="slot knmi-card">
+                <span class="label">Kust- en ruime binnenwateren</span>
+                <img id="knmi-2" src="">
+            </div>
             <div class="slot radar-card">
                 <span class="label">Buienradar</span>
-                <iframe src="https://gadgets.buienradar.nl/gadget/zoommap/?lat=52.1&lon=4.5&zoom=8&size=3&voor=1" scrolling="no" style="width:100%; height:100%; border:none;"></iframe>
+                <iframe src="https://gadgets.buienradar.nl/gadget/zoommap/?lat=52.01167&lon=4.71056&zoom=6&size=3&voor=0" scrolling="no" style="width:100%; height:100%; border:none;"></iframe>
             </div>
             <div id="last-update" class="timestamp">Laatste fetch: --:--:--</div>
         </div>
@@ -200,11 +229,7 @@
             camList.forEach(cam => {
                 const opt = document.createElement('option');
                 opt.value = cam.id;
-                if (cam.id === defaultId) {
-                    opt.text = "★ " + cam.name;
-                } else {
-                    opt.text = cam.name;
-                }
+                opt.text = (cam.id === defaultId) ? "★ " + cam.name : cam.name;
                 sel.add(opt);
             });
         }
