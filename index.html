@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mijn Waterdata</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #007dc5; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Actuele Waterstanden</h1>
+    <div id="status">Data laden...</div>
+    <table id="data-tabel">
+        <thead>
+            <tr>
+                <th>Locatie</th>
+                <th>Meting</th>
+                <th>Waarde</th>
+                <th>Tijd</th>
+            </tr>
+        </thead>
+        <tbody id="data-body"></tbody>
+    </table>
+
+    <script>
+        // De link naar de Rijkswaterstaat API (JSON formaat is makkelijker voor websites)
+        const url = "https://geo.rijkswaterstaat.nl/services/ogc/hws/DDAPI20/ows?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&TYPENAME=locatiesmetlaatstewaarneming&outputFormat=json&cql_filter=PARAMETER_WAT_OMSCHRIJVING%20LIKE%20'%25Waterhoogte%25'";
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                const rows = data.features;
+                let html = '';
+                // We tonen alleen de eerste 20 resultaten om het overzichtelijk te houden
+                rows.slice(0, 20).forEach(row => {
+                    const p = row.properties;
+                    html += `<tr>
+                        <td>${p.LOCATIE_NAAM}</td>
+                        <td>${p.PARAMETER_WAT_OMSCHRIJVING}</td>
+                        <td><b>${p.NUMERIEKEWAARDE}</b></td>
+                        <td>${new Date(p.WAARNEMINGSTIJDSTIP).toLocaleTimeString()}</td>
+                    </tr>`;
+                });
+                document.getElementById('data-body').innerHTML = html;
+                document.getElementById('status').innerHTML = "Laatste update: " + new Date().toLocaleTimeString();
+            })
+            .catch(err => {
+                document.getElementById('status').innerHTML = "Fout bij laden: " + err;
+            });
+    </script>
+</body>
+</html>
