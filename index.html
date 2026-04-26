@@ -2,6 +2,7 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
+    <title>Maritiem Dashboard</title>
     <style>
         body, html { 
             margin: 0; padding: 0; height: 100vh; width: 100vw;
@@ -19,9 +20,9 @@
         .monitor-layout { 
             display: grid; 
             grid-template-columns: 1fr 360px; 
-            grid-gap: 4px; 
+            grid-gap: 8px; 
             flex-grow: 1; 
-            padding: 4px; 
+            padding: 8px; 
             overflow: hidden; 
         }
 
@@ -43,8 +44,9 @@
             position: relative; 
             background: #0a0a0a; 
             flex-grow: 1;
-            border-radius: 2px; 
+            border-radius: 4px; 
             overflow: hidden;
+            border: 1px solid #222;
         }
 
         .slot iframe { 
@@ -54,7 +56,12 @@
             object-fit: cover; 
         }
 
-        .slot img { width: 100%; height: 100%; object-fit: contain; background: #000; }
+        .slot img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+            background: #000; 
+        }
 
         .label { 
             position: absolute; top: 0; left: 0; background: rgba(0, 212, 255, 0.85); 
@@ -73,11 +80,16 @@
             border-radius: 2px;
         }
 
-        .knmi-column {
-            display: grid;
-            grid-template-rows: 1fr 1fr auto; /* 'auto' toegevoegd voor de tijdstempel */
-            grid-gap: 4px;
+        .info-column {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            height: 100%;
         }
+
+        /* Specifieke hoogte voor de KNMI kaarten om ruimte te maken voor Buienradar */
+        .knmi-card { height: 25%; }
+        .radar-card { height: 45%; }
 
         .timestamp {
             font-size: 10px;
@@ -133,10 +145,14 @@
             </div>
         </div>
 
-        <div class="knmi-column">
-            <div class="slot"><span class="label">Noordzee</span><img id="knmi-1" src=""></div>
-            <div class="slot"><span class="label">Kust- en binnenwateren</span><img id="knmi-2" src=""></div>
-            <div id="last-update" class="timestamp">Laatste update: --:--:--</div>
+        <div class="info-column">
+            <div class="slot knmi-card"><span class="label">Noordzee</span><img id="knmi-1" src=""></div>
+            <div class="slot knmi-card"><span class="label">Waarschuwingen</span><img id="knmi-2" src=""></div>
+            <div class="slot radar-card">
+                <span class="label">Buienradar</span>
+                <iframe src="https://gadgets.buienradar.nl/gadget/zoommap/?lat=52.1&lon=4.5&zoom=8&size=3&voor=1" scrolling="no" style="width:100%; height:100%; border:none;"></iframe>
+            </div>
+            <div id="last-update" class="timestamp">Laatste fetch: --:--:--</div>
         </div>
     </div>
 
@@ -173,7 +189,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         setupSelectors();
         hardReset();
-        setInterval(verversKNMI, 600000); // Elke 10 minuten
+        setInterval(verversKNMI, 600000); 
     });
 
     function setupSelectors() {
@@ -186,7 +202,6 @@
                 opt.value = cam.id;
                 if (cam.id === defaultId) {
                     opt.text = "★ " + cam.name;
-                    opt.style.color = "#ff4444";
                 } else {
                     opt.text = cam.name;
                 }
@@ -222,11 +237,9 @@
         const nu = new Date();
         const t = nu.getTime();
         
-        // Update de afbeeldingen met cache-buster
         document.getElementById('knmi-1').src = "https://cdn.knmi.nl/knmi/map/page/weer/waarschuwingen_verwachtingen/kust-en-noordzee/northseamap.png?t=" + t;
         document.getElementById('knmi-2').src = "https://cdn.knmi.nl/knmi/map/page/weer/waarschuwingen_verwachtingen/kust-en-noordzee/waarschuwing_kust_0.gif?t=" + t;
         
-        // Update de tijdstempel tekst
         const tijdStr = nu.getHours().toString().padStart(2, '0') + ":" + 
                         nu.getMinutes().toString().padStart(2, '0') + ":" + 
                         nu.getSeconds().toString().padStart(2, '0');
