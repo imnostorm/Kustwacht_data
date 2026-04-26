@@ -2,85 +2,152 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <title>Live Kustwacht Data</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Kustwacht Data - Rijkswaterstaat</title>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h1 { color: #003e7e; }
-        #status { padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f0f4f8; 
+            color: #333;
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: auto; 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+        }
+        h1 { 
+            color: #003e7e; 
+            text-align: center;
+            border-bottom: 3px solid #007dc5;
+            padding-bottom: 15px;
+        }
+        #status { 
+            padding: 15px; 
+            margin-bottom: 20px; 
+            border-radius: 6px; 
+            text-align: center;
+            font-weight: bold;
+        }
         .loading { background: #fff3cd; color: #856404; }
         .error { background: #f8d7da; color: #721c24; }
         .success { background: #d4edda; color: #155724; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #007dc5; color: white; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
+        
+        table { 
+            border-collapse: collapse; 
+            width: 100%; 
+            margin-top: 10px;
+            font-size: 0.95rem;
+        }
+        th, td { 
+            border: 1px solid #dee2e6; 
+            padding: 12px; 
+            text-align: left; 
+        }
+        th { 
+            background-color: #007dc5; 
+            color: white; 
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        tr:hover { background-color: #e9ecef; }
+        .waarde-cel { 
+            font-weight: bold; 
+            color: #0056b3; 
+        }
+
+        @media (max-width: 600px) {
+            th, td { padding: 8px; font-size: 0.8rem; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Live Waterstanden</h1>
-    <div id="status" class="loading">Data aan het ophalen...</div>
+    <h1>Live Waterstanden (NAP)</h1>
+    <div id="status" class="loading">Data wordt opgehaald via proxy...</div>
     
     <table id="data-tabel">
         <thead>
             <tr>
                 <th>Locatie</th>
                 <th>Meting</th>
-                <th>Waarde (NAP)</th>
-                <th>Tijd</th>
+                <th>Waarde</th>
+                <th>Tijdstip</th>
             </tr>
         </thead>
-        <tbody id="data-body"></tbody>
+        <tbody id="data-body">
+            </tbody>
     </table>
 </div>
 
 <script>
-    // We gebruiken de officiële WFS link maar dwingen JSON af
-    const url = "https://geo.rijkswaterstaat.nl/services/ogc/hws/DDAPI20/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=locatiesmetlaatstewaarneming&outputFormat=application/json&cql_filter=PARAMETER_WAT_OMSCHRIJVING%20LIKE%20'%25Waterhoogte%25'";
+    // De bronlink (Rijkswaterstaat API)
+    const apiSource = "https://geo.rijkswaterstaat.nl/services/ogc/hws/DDAPI20/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=locatiesmetlaatstewaarneming&outputFormat=application/json&cql_filter=PARAMETER_WAT_OMSCHRIJVING%20LIKE%20'%25Waterhoogte%25'%20AND%20COMPARTIMENT='OW'";
+    
+    // We gebruiken AllOrigins als proxy om de CORS-beveiliging te omzeilen
+    const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(apiSource);
 
-    async function loadData() {
+    async function loadWaterData() {
         const statusDiv = document.getElementById('status');
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('API geeft foutmelding: ' + response.status);
-            
-            const data = await response.json();
-            const points = data.features;
+        const tableBody = document.getElementById('data-body');
 
-            if (!points || points.length === 0) {
-                statusDiv.innerHTML = "Geen data gevonden voor dit filter.";
+        try {
+            const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error('Proxy server fout');
+            
+            const wrapper = await response.json();
+            const data = JSON.parse(wrapper.contents);
+            const features = data.features;
+
+            if (!features || features.length === 0) {
+                statusDiv.className = "error";
+                statusDiv.innerHTML = "Geen actuele data gevonden op dit moment.";
                 return;
             }
 
-            // Sorteren op naam
-            points.sort((a, b) => a.properties.LOCATIE_NAAM.localeCompare(b.properties.LOCATIE_NAAM));
+            // Sorteer alfabetisch op locatienaam
+            features.sort((a, b) => a.properties.LOCATIE_NAAM.localeCompare(b.properties.LOCATIE_NAAM));
 
-            let rows = '';
-            points.forEach(p => {
-                const props = p.properties;
-                const tijd = new Date(props.WAARNEMINGSTIJDSTIP).toLocaleTimeString('nl-NL');
-                rows += `<tr>
-                    <td>${props.LOCATIE_NAAM}</td>
-                    <td>${props.PARAMETER_WAT_OMSCHRIJVING}</td>
-                    <td><b>${props.NUMERIEKEWAARDE} cm</b></td>
-                    <td>${tijd}</td>
-                </tr>`;
+            let tableHtml = '';
+            features.forEach(f => {
+                const p = f.properties;
+                const tijd = new Date(p.WAARNEMINGSTIJDSTIP).toLocaleTimeString('nl-NL', {
+                    hour: '2-digit', 
+                    minute: '2-digit'
+                });
+
+                tableHtml += `
+                    <tr>
+                        <td>${p.LOCATIE_NAAM}</td>
+                        <td>${p.PARAMETER_WAT_OMSCHRIJVING}</td>
+                        <td class="waarde-cel">${p.NUMERIEKEWAARDE} cm</td>
+                        <td>${tijd}</td>
+                    </tr>
+                `;
             });
 
-            document.getElementById('data-body').innerHTML = rows;
+            tableBody.innerHTML = tableHtml;
             statusDiv.className = "success";
-            statusDiv.innerHTML = "Laatste update: " + new Date().toLocaleTimeString('nl-NL');
+            statusDiv.innerHTML = "Laatste succesvolle update: " + new Date().toLocaleTimeString('nl-NL');
 
-        } catch (err) {
+        } catch (error) {
             statusDiv.className = "error";
-            statusDiv.innerHTML = "Fout: " + err.message + ". <br><small>Tip: Ververs de pagina of check of de RWS server online is.</small>";
-            console.error(err);
+            statusDiv.innerHTML = "Fout bij ophalen data: " + error.message;
+            console.error('Fetch error:', error);
         }
     }
 
-    loadData();
+    // Start de functie
+    loadWaterData();
+
+    // Ververs de data automatisch elke 5 minuten (300.000 ms)
+    setInterval(loadWaterData, 300000);
 </script>
 
 </body>
