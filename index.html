@@ -3,110 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maritiem Dashboard NL</title>
+    <title>Maritiem Dashboard Pro</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; background-color: #0b1e33; color: #fff; }
-        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 15px; }
+        :root { --bg: #0b1e33; --panel: #1a2e44; --accent: #00d4ff; --text: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; background-color: var(--bg); color: var(--text); }
+        h1 { text-align: center; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 25px; }
         
-        .panel { background: #1a2e44; border: 1px solid #007dc5; border-radius: 8px; padding: 15px; overflow: hidden; }
-        .panel h2 { color: #00d4ff; margin-top: 0; font-size: 1.2rem; border-bottom: 1px solid #334a66; padding-bottom: 10px; }
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        .panel { background: var(--panel); border: 1px solid #334a66; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; }
+        .panel h2 { color: var(--accent); font-size: 1.1rem; margin-top: 0; border-bottom: 1px solid #334a66; padding-bottom: 10px; }
         
-        /* Kaarten en Berichten */
-        iframe { width: 100%; height: 450px; border: none; background: white; border-radius: 4px; }
-        .weather-reports { height: 300px; overflow-y: auto; background: #000; color: #0f0; padding: 10px; font-family: monospace; font-size: 0.85rem; }
+        /* Kaarten */
+        .map-container { width: 100%; text-align: center; background: #fff; border-radius: 4px; padding: 5px; }
+        .map-container img { max-width: 100%; height: auto; border-radius: 2px; }
         
+        /* Berichten knoppen */
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .btn { background: #007dc5; color: white; padding: 10px; text-decoration: none; text-align: center; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        .btn:hover { background: var(--accent); color: var(--bg); }
+
         /* Data Tabel */
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        th { background: #007dc5; text-align: left; padding: 8px; }
-        td { padding: 8px; border-bottom: 1px solid #334a66; }
-        .location-select { width: 100%; padding: 8px; margin-bottom: 10px; background: #0b1e33; color: white; border: 1px solid #00d4ff; }
+        .select-style { width: 100%; padding: 10px; background: var(--bg); color: white; border: 1px solid var(--accent); border-radius: 4px; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        td { padding: 10px 5px; border-bottom: 1px solid #334a66; }
+        .label { color: #aaa; }
+        .val { text-align: right; font-weight: bold; color: var(--accent); }
+        .unit { font-size: 0.7rem; color: #888; margin-left: 3px; }
         
-        .value { color: #00d4ff; font-weight: bold; }
+        #status-bar { font-size: 0.75rem; text-align: center; margin-top: 20px; color: #888; }
     </style>
 </head>
 <body>
 
-<h1 style="text-align:center; color: #00d4ff;">Maritiem Operationeel Dashboard</h1>
+<h1>Maritiem Operationeel Dashboard</h1>
 
 <div class="dashboard">
 
     <div class="panel">
-        <h2>KNMI Waarschuwingen Kust & Binnenwater</h2>
-        <iframe src="https://www.knmi.nl/nederland-nu/weer/waarschuwingen/overzicht"></iframe>
+        <h2>Weerwaarschuwingen Kust</h2>
+        <div class="map-container">
+            <img src="https://cdn.knmi.nl/knmi/map/current/weather/warning/warning_nederland_land.png" alt="KNMI Kust">
+        </div>
     </div>
 
     <div class="panel">
-        <h2>KNMI Waarschuwingen Noordzee</h2>
-        <iframe src="https://www.knmi.nl/nederland-nu/weer/waarschuwingen-noordzee"></iframe>
+        <h2>Weerwaarschuwingen Noordzee</h2>
+        <div class="map-container">
+            <img src="https://cdn.knmi.nl/knmi/map/current/weather/warning/warning_noordzee.png" alt="KNMI Noordzee">
+        </div>
     </div>
 
     <div class="panel">
-        <h2>Officiële Berichten</h2>
-        <select class="location-select" onchange="document.getElementById('report-frame').src = this.value">
-            <option value="https://www.knmi.nl/nederland-nu/scheepvaart/marifoonbericht">Marifoonbericht</option>
-            <option value="https://www.knmi.nl/nederland-nu/scheepvaart/scheepvaartbericht">Scheepvaartbericht</option>
-        </select>
-        <iframe id="report-frame" src="https://www.knmi.nl/nederland-nu/scheepvaart/marifoonbericht" style="height: 350px;"></iframe>
+        <h2>Officiële Berichten & Navtex</h2>
+        <p style="font-size: 0.8rem; color: #ccc;">Klik om de actuele berichten te openen in een nieuw venster:</p>
+        <div class="btn-group">
+            <a href="https://www.knmi.nl/nederland-nu/scheepvaart/marifoonbericht" target="_blank" class="btn">Marifoonbericht</a>
+            <a href="https://www.knmi.nl/nederland-nu/scheepvaart/scheepvaartbericht" target="_blank" class="btn">Scheepvaartbericht</a>
+            <a href="https://www.knmi.nl/nederland-nu/scheepvaart/navtex" target="_blank" class="btn">Navtex Bericht</a>
+            <a href="https://waterinfo.rws.nl/#!/kaarten/getij/" target="_blank" class="btn">Getijverwachting</a>
+        </div>
     </div>
 
     <div class="panel">
         <h2>Live Meetgegevens (RWS)</h2>
-        <select id="locatie-kiezer" class="location-select" onchange="updateDashboardData()">
-            <option value="HARLNG">Harlingen</option>
-            <option value="DENHLDR">Den Helder</option>
-            <option value="WESTTS">West-Terschelling</option>
-            <option value="VLIES">Vlieland</option>
-            <option value="LAUWOG">Lauwersoog</option>
+        <select id="locatie" class="select-style" onchange="loadRWSData()">
+            <option value="Harlingen">Harlingen</option>
+            <option value="Den Helder">Den Helder</option>
+            <option value="West-Terschelling">Terschelling</option>
+            <option value="Vlieland">Vlieland</option>
+            <option value="Delfzijl">Delfzijl</option>
+            <option value="Lauwersoog">Lauwersoog</option>
+            <option value="Hoek van Holland">Hoek van Holland</option>
         </select>
         
         <table>
-            <tr><td>Waterhoogte (Huidig)</td><td class="value" id="val-water-nu">Laden...</td></tr>
-            <tr><td>Astronomisch</td><td class="value" id="val-water-astro">--</td></tr>
-            <tr><td>Afwijking (Opzet)</td><td class="value" id="val-water-afw">--</td></tr>
-            <tr><td>Luchttemperatuur</td><td class="value" id="val-temp">--</td></tr>
-            <tr><td>Wind</td><td class="value" id="val-wind">--</td></tr>
-            <tr><td>Golfhoogte</td><td class="value" id="val-golf">--</td></tr>
+            <tr><td class="label">Waterhoogte (NAP)</td><td class="val" id="wat-nu">--</td></tr>
+            <tr><td class="label">Astronomisch Getij</td><td class="val" id="wat-astro">--</td></tr>
+            <tr><td class="label">Afwijking / Opzet</td><td class="val" id="wat-afw">--</td></tr>
+            <tr><td class="label">Golfhoogte</td><td class="val" id="golf">--</td></tr>
+            <tr><td class="label">Watertemperatuur</td><td class="val" id="w-temp">--</td></tr>
+            <tr><td class="label">Windkracht</td><td class="val" id="wind">--</td></tr>
+            <tr><td class="label">Windstoten</td><td class="val" id="stoot">--</td></tr>
+            <tr><td class="label">Luchtdruk</td><td class="val" id="druk">--</td></tr>
+            <tr><td class="label">Zicht</td><td class="val" id="zicht">--</td></tr>
         </table>
     </div>
 
 </div>
 
+<div id="status-bar">Dashboard Live | Data bron: RWS Wadar API | Proxy: AllOrigins</div>
+
 <script>
-    // Proxy om CORS te omzeilen
     const proxy = "https://api.allorigins.win/get?url=";
 
-    async function updateDashboardData() {
-        const loc = document.getElementById('locatie-kiezer').value;
-        const status = document.getElementById('val-water-nu');
-        status.innerHTML = "Laden...";
-
-        // Voorbeeld link voor Waterhoogte via WFS
-        const rwsUrl = `https://geo.rijkswaterstaat.nl/services/ogc/hws/DDAPI20/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=locatiesmetlaatstewaarneming&outputFormat=application/json&cql_filter=LOCATIE_NAAM%20LIKE%20'%25${loc}%25'`;
+    async function loadRWSData() {
+        const loc = document.getElementById('locatie').value;
+        // We vragen alle laatste waarnemingen voor de gekozen locatie
+        const api = `https://geo.rijkswaterstaat.nl/services/ogc/hws/DDAPI20/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=locatiesmetlaatstewaarneming&outputFormat=application/json&cql_filter=LOCATIE_NAAM%20LIKE%20'%25${loc}%25'`;
         
         try {
-            const res = await fetch(proxy + encodeURIComponent(rwsUrl));
-            const wrapper = await res.json();
+            const resp = await fetch(proxy + encodeURIComponent(api));
+            const wrapper = await resp.json();
             const data = JSON.parse(wrapper.contents);
             
-            // We zoeken de juiste waarden in de lijst
+            // Reset velden
+            const fields = ['wat-nu', 'wat-astro', 'wat-afw', 'golf', 'w-temp', 'wind', 'stoot', 'druk', 'zicht'];
+            fields.forEach(id => document.getElementById(id).innerHTML = "--");
+
             data.features.forEach(f => {
                 const p = f.properties;
-                if(p.PARAMETER_WAT_OMSCHRIJVING.includes("Waterhoogte")) {
-                    document.getElementById('val-water-nu').innerHTML = p.NUMERIEKEWAARDE + " cm";
-                }
-                if(p.PARAMETER_WAT_OMSCHRIJVING.includes("Wind")) {
-                    document.getElementById('val-wind').innerHTML = p.NUMERIEKEWAARDE + " m/s";
-                }
+                const val = p.NUMERIEKEWAARDE;
+                const omschrijving = p.PARAMETER_WAT_OMSCHRIJVING.toLowerCase();
+
+                if (omschrijving.includes("waterhoogte") && !omschrijving.includes("astronomisch")) document.getElementById('wat-nu').innerHTML = val + "<span class='unit'>cm</span>";
+                if (omschrijving.includes("astronomisch")) document.getElementById('wat-astro').innerHTML = val + "<span class='unit'>cm</span>";
+                if (omschrijving.includes("golfhoogte")) document.getElementById('golf').innerHTML = val + "<span class='unit'>cm</span>";
+                if (omschrijving.includes("watertemperatuur")) document.getElementById('w-temp').innerHTML = val + "<span class='unit'>°C</span>";
+                if (omschrijving.includes("windsnelheid")) document.getElementById('wind').innerHTML = (val * 3.6 / 1.852).toFixed(1) + "<span class='unit'>kn</span>";
+                if (omschrijving.includes("windstoot")) document.getElementById('stoot').innerHTML = (val * 3.6 / 1.852).toFixed(1) + "<span class='unit'>kn</span>";
+                if (omschrijving.includes("luchtdruk")) document.getElementById('druk').innerHTML = val + "<span class='unit'>hPa</span>";
+                if (omschrijving.includes("zicht")) document.getElementById('zicht').innerHTML = val + "<span class='unit'>m</span>";
             });
-            
+
+            // Bereken afwijking als beide bekend zijn
+            const nu = parseFloat(document.getElementById('wat-nu').innerText);
+            const astro = parseFloat(document.getElementById('wat-astro').innerText);
+            if (!isNaN(nu) && !isNaN(astro)) {
+                const afw = (nu - astro).toFixed(0);
+                document.getElementById('wat-afw').innerHTML = (afw > 0 ? "+" : "") + afw + "<span class='unit'>cm</span>";
+            }
+
         } catch (e) {
             console.error(e);
-            status.innerHTML = "Fout";
         }
     }
 
-    // Initialiseer data
-    updateDashboardData();
+    loadRWSData();
+    // Ververs elke 5 min
+    setInterval(() => { location.reload(); }, 300000);
 </script>
 
 </body>
