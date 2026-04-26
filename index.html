@@ -3,179 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maritiem Dashboard Live</title>
+    <title>Waddendata Clone - Dashboard</title>
     <style>
-        :root { --bg: #0a192f; --panel: #172a46; --accent: #00d4ff; --text: #ccd6f6; --text-muted: #8892b0; }
-        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; margin: 0; padding: 15px; background-color: var(--bg); color: var(--text); }
-        h1 { text-align: center; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; font-size: 1.5rem; margin-bottom: 25px; }
-        
-        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
-        .panel { background: var(--panel); border: 1px solid #233554; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-        .panel h2 { color: var(--accent); font-size: 1rem; margin-top: 0; border-bottom: 1px solid #233554; padding-bottom: 8px; text-transform: uppercase; }
-        
-        /* Kaarten */
-        .map-container { width: 100%; text-align: center; background: #fff; border-radius: 4px; padding: 5px; box-sizing: border-box; }
-        .map-container img { max-width: 100%; height: auto; border-radius: 2px; }
-        
-        /* Berichten */
-        .select-berichten { width: 100%; padding: 10px; background: #0a192f; color: white; border: 1px solid #233554; border-radius: 4px; margin-bottom: 10px; }
-        iframe { width: 100%; height: 350px; border: none; background: white; border-radius: 4px; display: none; } /* Standaard verborgen */
-        
-        /* Data Tabel */
-        .select-locatie { width: 100%; padding: 10px; background: #0a192f; color: white; border: 1px solid var(--accent); border-radius: 4px; margin-bottom: 15px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        td { padding: 8px 4px; border-bottom: 1px solid #233554; }
-        .label { color: var(--text-muted); }
-        .val { text-align: right; font-weight: bold; color: var(--accent); }
-        .unit { font-size: 0.7rem; color: #667085; margin-left: 2px; }
-        
-        #status-bar { font-size: 0.7rem; text-align: center; margin-top: 20px; color: #495670; }
+        :root {
+            --bg-color: #1a1a1a;
+            --panel-bg: #262626;
+            --accent-blue: #00d4ff;
+            --border-color: #333;
+            --text-color: #ffffff;
+            --text-muted: #aaaaaa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .header {
+            background-color: #000;
+            padding: 5px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--accent-blue);
+            margin-bottom: 10px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: auto;
+            gap: 10px;
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            color: var(--accent-blue);
+            font-weight: bold;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Widgets */
+        .map-box { grid-column: span 1; grid-row: span 2; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table td { padding: 5px 0; border-bottom: 1px solid #333; }
+        .data-table .label { color: var(--text-muted); }
+        .data-table .value { text-align: right; font-weight: bold; color: var(--accent-blue); }
+
+        select {
+            background: #000;
+            color: #fff;
+            border: 1px solid var(--accent-blue);
+            padding: 3px;
+            font-size: 12px;
+        }
+
+        iframe { width: 100%; border: none; background: #000; }
+
+        .status-bar {
+            grid-column: span 3;
+            text-align: center;
+            font-size: 11px;
+            color: #555;
+            margin-top: 10px;
+        }
+
+        /* Kleurcodes voor waarschuwingen */
+        .code-groen { color: #00ff00; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<h1>Maritiem Operationeel Dashboard</h1>
+<div class="header">
+    <div class="code-groen">CODE GROEN</div>
+    <div style="font-weight: bold;">WADDENDATA DASHBOARD</div>
+    <div id="clock">--:--:--</div>
+</div>
 
-<div class="dashboard">
+<div class="grid-container">
+    
+    <div class="panel map-box">
+        <div class="panel-header">Actuele Neerslag</div>
+        <iframe src="https://gadgets.buienradar.nl/gadget/zoommap/?lat=53.2&lng=5.5&overname=2&zoom=8&naam=wadden&size=3&voorst=1" scrolling="no" height="500"></iframe>
+    </div>
 
     <div class="panel">
-        <h2>KNMI Waarschuwingen Kust</h2>
-        <div class="map-container">
-            <img src="https://cdn.knmi.nl/knmi/map/current/weather/warning/warning_nederland_land.png" alt="KNMI Waarschuwingen Kust">
+        <div class="panel-header">
+            Weerdata RWS / KNMI
+            <select id="weer-locatie" onchange="updateData()">
+                <option value="Terschelling">Terschelling</option>
+                <option value="Vlieland">Vlieland</option>
+                <option value="Harlingen">Harlingen</option>
+                <option value="Lauwersoog">Lauwersoog</option>
+            </select>
         </div>
-    </div>
-
-    <div class="panel">
-        <h2>KNMI Waarschuwingen Noordzee</h2>
-        <div class="map-container">
-            <img src="https://cdn.knmi.nl/knmi/map/current/weather/warning/warning_noordzee.png" alt="KNMI Waarschuwingen Noordzee">
-        </div>
-    </div>
-
-    <div class="panel">
-        <h2>Officiële Berichten</h2>
-        <select class="select-berichten" onchange="showReport(this.value)">
-            <option value="">- Kies een bericht -</option>
-            <option value="https://www.knmi.nl/nederland-nu/scheepvaart/marifoonbericht">Marifoonbericht</option>
-            <option value="https://www.knmi.nl/nederland-nu/scheepvaart/scheepvaartbericht">Scheepvaartbericht</option>
-        </select>
-        <p style="font-size: 0.8rem; color: #667085; text-align:center;">
-            (Indien berichten niet laden, klik op de officiële KNMI pagina.)
-        </p>
-        <iframe id="report-frame"></iframe>
-    </div>
-
-    <div class="panel">
-        <h2>Live Meetgegevens (RWS)</h2>
-        <select id="locatie-select" class="select-locatie" onchange="loadRWSDashboard()">
-            <option value="Den Helder">Den Helder</option>
-            <option value="Harlingen">Harlingen</option>
-            <option value="Vlieland">Vlieland</option>
-            <option value="Delfzijl">Delfzijl</option>
-            <option value="Lauwersoog">Lauwersoog</option>
-            <option value="Hoek van Holland">Hoek van Holland</option>
-        </select>
-        
-        <table>
-            <tr><td class="label">Waterhoogte (NAP)</td><td class="val" id="wat-nu">Laden...</td></tr>
-            <tr><td class="label">Astronomisch Getij</td><td class="val" id="wat-astro">--</td></tr>
-            <tr><td class="label">Opzet / Afwijking</td><td class="val" id="wat-opz">--</td></tr>
-            <tr><td class="label">Golfhoogte</td><td class="val" id="golf">--</td></tr>
-            <tr><td class="label">Wind</td><td class="val" id="wind">--</td></tr>
-            <tr><td class="label">Watertemperatuur</td><td class="val" id="w-temp">--</td></tr>
-            <tr><td class="label">Luchtdruk</td><td class="val" id="druk">--</td></tr>
+        <table class="data-table">
+            <tr><td class="label">Temperatuur</td><td class="value" id="val-temp">--</td></tr>
+            <tr><td class="label">Luchtvovhtigheid</td><td class="value" id="val-vocht">--</td></tr>
+            <tr><td class="label">Windsnelheid</td><td class="value" id="val-wind">--</td></tr>
+            <tr><td class="label">Windstoten</td><td class="value" id="val-stoot">--</td></tr>
+            <tr><td class="label">Luchtdruk</td><td class="value" id="val-druk">--</td></tr>
+            <tr><td class="label">Zicht</td><td class="value" id="val-zicht">--</td></tr>
         </table>
     </div>
 
+    <div class="panel">
+        <div class="panel-header">Waterhoogte RWS (cm)</div>
+        <table class="data-table" id="water-tabel">
+            <thead>
+                <tr style="font-size: 11px; color: #888;">
+                    <th align="left">Plaats</th>
+                    <th align="right">Huidig</th>
+                    <th align="right">Astr.</th>
+                    <th align="right">Afw.</th>
+                </tr>
+            </thead>
+            <tbody id="water-body">
+                <tr><td colspan="4">Laden...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">Getijden Verwachting</div>
+        <div style="font-size: 12px; color: #ccc; text-align: center; padding: 20px;">
+            Astronomische data wordt geladen...
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">Marifoon Bericht</div>
+        <div id="marifoon-bericht" style="font-size: 12px; line-height: 1.4; color: #00ff00; font-family: monospace; height: 150px; overflow-y: auto;">
+            Ophalen van laatste bericht... (Indien geblokkeerd, open KNMI.nl)
+        </div>
+    </div>
+
+    <div class="status-bar">
+        Data Bron: Rijkswaterstaat Wadar API | KNMI | Buienradar | Dashboardversie 1.0
+    </div>
 </div>
 
-<div id="status-bar">Dashboard Live | Data bron: KNMI & RWS Wadar API | Proxy: AllOrigins</div>
-
 <script>
-    // Berichten tonen/verbergen
-    function showReport(url) {
-        const frame = document.getElementById('report-frame');
-        if(url) {
-            frame.src = url;
-            frame.style.display = "block";
-        } else {
-            frame.style.display = "none";
-        }
-    }
+    // Klok functie
+    setInterval(() => {
+        const now = new Date();
+        document.getElementById('clock').innerHTML = now.toLocaleTimeString('nl-NL');
+    }, 1000);
 
-    // Proxy om de browser-beveiliging te passeren
     const proxy = "https://api.allorigins.win/get?url=";
 
-    async function loadRWSDashboard() {
-        const loc = document.getElementById('locatie-select').value;
-        const statusWater = document.getElementById('wat-nu');
-        statusWater.innerHTML = "Laden...";
-
-        // RWS Link met uitgebreid filter voor wind, druk, temp, enz.
-        const rwsFilter = `LOCATIE_NAAM LIKE '%Waterhoogte%' AND COMPARTIMENT_OMSCHRIJVING='OW' AND LOCATIE_NAAM LIKE '%${loc}%'`;
-        const api = `https://geo.rijkswaterstaat.nl/services/ogc/hws/DDAPI20/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=locatiesmetlaatstewaarneming&outputFormat=application/json&cql_filter=${encodeURIComponent(rwsFilter)}`;
+    async function updateData() {
+        const selectedLoc = document.getElementById('weer-locatie').value;
         
+        // RWS WFS Query voor de geselecteerde locaties
+        // We vragen alle laatste waarnemingen van de Waddenzee
+        const rwsUrl = "https://geo.rijkswaterstaat.nl/services/ogc/hws/DDAPI20/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=locatiesmetlaatstewaarneming&outputFormat=application/json&cql_filter=COMPARTIMENT_OMSCHRIJVING='Waddenzee'";
+
         try {
-            const resp = await fetch(proxy + encodeURIComponent(api));
-            const wrapper = await resp.json();
-            
-            // AllOrigins geeft data terug in wrapper.contents
-            if (!wrapper.contents) throw new Error('Geen data');
+            const response = await fetch(proxy + encodeURIComponent(rwsUrl));
+            const wrapper = await response.json();
             const data = JSON.parse(wrapper.contents);
+            const features = data.features;
+
+            let waterHtml = '';
             
-            // Reset velden
-            document.getElementById('wat-nu').innerHTML = "--";
-            document.getElementById('wat-astro').innerHTML = "--";
-            document.getElementById('wat-opz').innerHTML = "--";
-            document.getElementById('golf').innerHTML = "--";
-            document.getElementById('wind').innerHTML = "--";
-            document.getElementById('w-temp').innerHTML = "--";
-            document.getElementById('druk').innerHTML = "--";
-
-            data.features.forEach(f => {
+            // Loop door de data om de tabel en weerdata te vullen
+            features.forEach(f => {
                 const p = f.properties;
-                const omschrijving = p.PARAMETER_WAT_OMSCHRIJVING.toLowerCase();
-                const value = p.NUMERIEKEWAARDE;
+                const loc = p.LOCATIE_NAAM;
+                const waarde = p.NUMERIEKEWAARDE;
+                const parameter = p.PARAMETER_WAT_OMSCHRIJVING;
 
-                if (omschrijving.includes("waterhoogte") && !omschrijving.includes("astronomisch")) {
-                    document.getElementById('wat-nu').innerHTML = value + "<span class='unit'>cm</span>";
+                // Update de weer-tabel voor de geselecteerde locatie
+                if (loc.includes(selectedLoc)) {
+                    if (parameter.includes("Temperatuur")) document.getElementById('val-temp').innerHTML = waarde + " °C";
+                    if (parameter.includes("Windsnelheid")) document.getElementById('val-wind').innerHTML = (waarde * 1.94).toFixed(1) + " kn";
+                    if (parameter.includes("Windstoot")) document.getElementById('val-stoot').innerHTML = (waarde * 1.94).toFixed(1) + " kn";
+                    if (parameter.includes("Luchtdruk")) document.getElementById('val-druk').innerHTML = waarde + " hPa";
+                    if (parameter.includes("Zicht")) document.getElementById('val-zicht').innerHTML = waarde + " m";
                 }
-                if (omschrijving.includes("astronomisch")) {
-                    document.getElementById('wat-astro').innerHTML = value + "<span class='unit'>cm</span>";
-                }
-                if (omschrijving.includes("golfhoogte")) {
-                    document.getElementById('golf').innerHTML = value + "<span class='unit'>cm</span>";
-                }
-                if (omschrijving.includes("windsnelheid")) {
-                    // m/s naar knopen
-                    const kn = (value * 1.94384).toFixed(1);
-                    document.getElementById('wind').innerHTML = kn + "<span class='unit'>kn</span>";
-                }
-                if (omschrijving.includes("watertemperatuur")) {
-                    document.getElementById('w-temp').innerHTML = value + "<span class='unit'>°C</span>";
-                }
-                if (omschrijving.includes("luchtdruk")) {
-                    document.getElementById('druk').innerHTML = value + "<span class='unit'>hPa</span>";
+
+                // Vul de algemene waterhoogte tabel (beperkt tot enkele hoofdplaatsen)
+                const hoofdPlaatsen = ["Harlingen", "West-Terschelling", "Vlieland", "Nes", "Lauwersoog", "Delfzijl"];
+                if (hoofdPlaatsen.includes(loc) && parameter === "Waterhoogte") {
+                    waterHtml += `<tr>
+                        <td>${loc}</td>
+                        <td class="value">${waarde}</td>
+                        <td class="value" style="color:#666">--</td>
+                        <td class="value" style="color:#ff4444">--</td>
+                    </tr>`;
                 }
             });
 
-            // Bereken Opzet (Huidig - Astronomisch)
-            const nu = parseFloat(document.getElementById('wat-nu').innerText);
-            const astro = parseFloat(document.getElementById('wat-astro').innerText);
-            if(!isNaN(nu) && !isNaN(astro)) {
-                const opzet = (nu - astro).toFixed(0);
-                const opzetStr = (opzet > 0 ? "+" : "") + opzet;
-                document.getElementById('wat-opz').innerHTML = opzetStr + "<span class='unit'>cm</span>";
-            }
+            document.getElementById('water-body').innerHTML = waterHtml;
 
-        } catch (e) {
-            statusWater.innerHTML = "API Fout";
-            console.error(e);
+        } catch (err) {
+            console.error("Fout bij ophalen data:", err);
         }
     }
 
-    // Initialiseren
-    loadRWSDashboard();
+    // Start het ophalen
+    updateData();
+    // Elke 5 minuten verversen
+    setInterval(updateData, 300000);
 </script>
 
 </body>
