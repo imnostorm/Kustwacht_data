@@ -2,224 +2,237 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Waddendata Dashboard - Live</title>
     <style>
-        :root {
-            --bg: #121212;
-            --panel: #1e1e1e;
-            --accent: #00d4ff;
-            --border: #333;
-            --text: #ffffff;
-            --muted: #888;
-            --green: #00ff00;
+        body, html { 
+            margin: 0; padding: 0; height: 100vh; width: 100vw;
+            background: #000; color: #fff; font-family: 'Segoe UI', sans-serif;
+            overflow: hidden; 
         }
 
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 10px;
-            font-size: 13px;
+        .main-container { 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            width: 100vw; 
+        }
+        
+        .monitor-layout { 
+            display: grid; 
+            grid-template-columns: 1fr 360px; 
+            grid-gap: 4px; 
+            flex-grow: 1; 
+            padding: 4px; 
+            overflow: hidden; 
         }
 
-        /* Bovenbalk */
-        .header {
-            background-color: #000;
-            padding: 8px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--accent);
-            margin-bottom: 10px;
-            font-weight: bold;
+        .webcam-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            grid-template-rows: 1fr 1fr; 
+            grid-gap: 10px; 
         }
 
-        /* Grid Layout */
-        .dashboard {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            grid-template-areas: 
-                "map weather water"
-                "map tide report";
-            gap: 10px;
-        }
-
-        .panel {
-            background-color: var(--panel);
-            border: 1px solid var(--border);
-            padding: 12px;
+        .cam-box {
             display: flex;
             flex-direction: column;
+            gap: 4px;
+            height: 100%;
         }
 
-        .panel-header {
-            color: var(--accent);
-            font-weight: bold;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 6px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            text-transform: uppercase;
+        .slot { 
+            position: relative; 
+            background: #0a0a0a; 
+            flex-grow: 1;
+            border-radius: 2px; 
+            overflow: hidden;
         }
 
-        /* Specifieke Widgets */
-        .area-map { grid-area: map; min-height: 550px; }
-        .area-weather { grid-area: weather; }
-        .area-water { grid-area: water; }
-        .area-tide { grid-area: tide; }
-        .area-report { grid-area: report; }
+        .slot iframe { 
+            width: 100% !important; 
+            height: 100% !important; 
+            border: none; 
+            object-fit: cover; 
+        }
 
-        /* Tabellen */
-        table { width: 100%; border-collapse: collapse; }
-        td { padding: 6px 0; border-bottom: 1px solid #2a2a2a; }
-        .label { color: var(--muted); }
-        .value { text-align: right; font-weight: bold; color: var(--accent); }
-        
-        select {
-            background: #000;
-            color: var(--accent);
-            border: 1px solid var(--accent);
-            padding: 2px;
+        .slot img { width: 100%; height: 100%; object-fit: contain; background: #000; }
+
+        .label { 
+            position: absolute; top: 0; left: 0; background: rgba(0, 212, 255, 0.85); 
+            color: #000; padding: 2px 8px; font-size: 10px; font-weight: bold; 
+            z-index: 20; text-transform: uppercase; border-bottom-right-radius: 4px;
+        }
+
+        .cam-selector {
+            background: #111;
+            color: #ccc;
+            border: 1px solid #333;
+            padding: 6px;
             font-size: 11px;
+            width: 100%;
+            outline: none;
+            border-radius: 2px;
         }
 
-        iframe { width: 100%; height: 100%; border: none; border-radius: 4px; }
+        .knmi-column {
+            display: grid;
+            grid-template-rows: 1fr 1fr auto; /* 'auto' toegevoegd voor de tijdstempel */
+            grid-gap: 4px;
+        }
 
-        .marifoon-text {
-            color: var(--green);
+        .timestamp {
+            font-size: 10px;
+            color: #666;
+            text-align: right;
+            padding: 2px 5px;
             font-family: monospace;
-            font-size: 11px;
-            line-height: 1.4;
-            height: 150px;
-            overflow-y: auto;
-            background: #000;
-            padding: 8px;
         }
 
-        @media (max-width: 1000px) {
-            .dashboard { grid-template-columns: 1fr; grid-template-areas: "map" "weather" "water" "tide" "report"; }
+        .controls { 
+            background: #050505; 
+            border-top: 1px solid #222; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            height: 40px; 
         }
+
+        button { 
+            padding: 5px 20px;
+            background: #222; 
+            color: #bbb; 
+            font-weight: bold; 
+            cursor: pointer; 
+            border: 1px solid #444;
+            border-radius: 2px;
+            font-size: 11px;
+        }
+
+        button:hover { background: #00d4ff; color: #000; border-color: #00d4ff; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <div style="color: var(--green);">● CODE GROEN</div>
-    <div>MARITIEM DASHBOARD NEDERLAND</div>
-    <div id="clock">00:00:00</div>
-</div>
-
-<div class="dashboard">
-    
-    <div class="panel area-map">
-        <div class="panel-header">Actuele Neerslag & Radar</div>
-        <iframe src="https://gadgets.buienradar.nl/gadget/zoommap/?lat=53.25&lng=5.5&overname=2&zoom=8&naam=wadden&size=3&voorst=1"></iframe>
-    </div>
-
-    <div class="panel area-weather">
-        <div class="panel-header">
-            Weerdata KNMI/RWS
-            <select id="loc-weather" onchange="fetchRWS()">
-                <option value="Harlingen">Harlingen</option>
-                <option value="Terschelling">Terschelling</option>
-                <option value="Vlieland">Vlieland</option>
-                <option value="Lauwersoog">Lauwersoog</option>
-            </select>
+<div class="main-container">
+    <div class="monitor-layout">
+        <div class="webcam-grid">
+            <div class="cam-box">
+                <div class="slot"><span class="label" id="lbl-1">L-Boven</span><div id="cont-1" style="height:100%"></div></div>
+                <select class="cam-selector" id="sel-1" onchange="changeCam(1)"></select>
+            </div>
+            <div class="cam-box">
+                <div class="slot"><span class="label" id="lbl-2">R-Boven</span><div id="cont-2" style="height:100%"></div></div>
+                <select class="cam-selector" id="sel-2" onchange="changeCam(2)"></select>
+            </div>
+            <div class="cam-box">
+                <div class="slot"><span class="label" id="lbl-3">L-Onder</span><div id="cont-3" style="height:100%"></div></div>
+                <select class="cam-selector" id="sel-3" onchange="changeCam(3)"></select>
+            </div>
+            <div class="cam-box">
+                <div class="slot"><span class="label" id="lbl-4">R-Onder</span><div id="cont-4" style="height:100%"></div></div>
+                <select class="cam-selector" id="sel-4" onchange="changeCam(4)"></select>
+            </div>
         </div>
-        <table>
-            <tr><td class="label">Temperatuur</td><td class="value" id="w-temp">-- °C</td></tr>
-            <tr><td class="label">Windsnelheid</td><td class="value" id="w-wind">-- kn</td></tr>
-            <tr><td class="label">Windstoten</td><td class="value" id="w-gust">-- kn</td></tr>
-            <tr><td class="label">Luchtdruk</td><td class="value" id="w-pres">-- hPa</td></tr>
-            <tr><td class="label">Zicht</td><td class="value" id="w-vis">-- m</td></tr>
-        </table>
-    </div>
 
-    <div class="panel area-water">
-        <div class="panel-header">Waterhoogte RWS (cm t.o.v. NAP)</div>
-        <table id="water-table">
-            <tbody id="water-list">
-                <tr><td class="label">Laden...</td><td></td></tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="panel area-tide">
-        <div class="panel-header">Getijden (Astronomisch)</div>
-        <div style="text-align:center; padding:20px; color:var(--muted);">
-            Getijde-informatie wordt berekend...
+        <div class="knmi-column">
+            <div class="slot"><span class="label">Noordzee</span><img id="knmi-1" src=""></div>
+            <div class="slot"><span class="label">Kust- en binnenwateren</span><img id="knmi-2" src=""></div>
+            <div id="last-update" class="timestamp">Laatste update: --:--:--</div>
         </div>
     </div>
 
-    <div class="panel area-report">
-        <div class="panel-header">Marifoonbericht</div>
-        <div class="marifoon-text">
-            GEEN WAARSCHUWINGEN VAN KRACHT.<br><br>
-            Verwachting voor 20:00 tot 08:00 uur:<br>
-            Texel Harlingen: Noordwest 3-4, spoedig ruimend Noord 4-5. Goed zicht.
-        </div>
+    <div class="controls">
+        <button onclick="hardReset()">HERSTEL ALLE STANDAARDEN</button>
     </div>
-
 </div>
 
 <script>
-    // Klok
-    setInterval(() => {
-        document.getElementById('clock').innerHTML = new Date().toLocaleTimeString('nl-NL');
-    }, 1000);
+    const camList = [
+        {id: 'KjK02QIm4ZI', name: 'Brouwersdam'},
+        {id: 'mI1Os7TFdGc', name: 'Egmond aan Zee'},
+        {id: 'jDF264Bg1_c', name: 'Hoek v Holland Blvd'},
+        {id: 'mnxV4iit7S4', name: 'Kijkduin Blvd'},
+        {id: 'Ud7I4jprFN0', name: 'Maasvlakte'},
+        {id: '_pGIJmXxAHk', name: 'Nieuwe Waterweg'},
+        {id: 'dtFG_mcfWjQ', name: 'Noordwijk Blvd'},
+        {id: 'L76VKII_Z7k', name: 'Noordwijk Vuurtoren'},
+        {id: 'csMnwbjV5vg', name: 'Rockanje'},
+        {id: 'A5kXiKzbBFs', name: 'Scheveningen Blvd'},
+        {id: 'DaG5JReOYEw', name: 'Scheveningen Noord'},
+        {id: 'Ud7I4jprFN0', name: 'Ter Heijde'},
+        {id: 't3qbzZHOTyg', name: 'Wassenaarse Slag'},
+        {id: 'q0-DDh1zdY4', name: 'Zandvoort Blvd'}
+    ];
 
-    const proxy = "https://api.allorigins.win/get?url=";
+    const defaults = {
+        1: 'A5kXiKzbBFs',
+        2: 'q0-DDh1zdY4',
+        3: 'KjK02QIm4ZI',
+        4: 'mI1Os7TFdGc'
+    };
 
-    async function fetchRWS() {
-        const selectedLoc = document.getElementById('loc-weather').value;
-        const waterList = document.getElementById('water-list');
-        
-        // We filteren op de Waddenzee om de data klein te houden
-        const api = "https://geo.rijkswaterstaat.nl/services/ogc/hws/DDAPI20/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=locatiesmetlaatstewaarneming&outputFormat=application/json&cql_filter=COMPARTIMENT_OMSCHRIJVING='Waddenzee'";
+    document.addEventListener('DOMContentLoaded', () => {
+        setupSelectors();
+        hardReset();
+        setInterval(verversKNMI, 600000); // Elke 10 minuten
+    });
 
-        try {
-            const resp = await fetch(proxy + encodeURIComponent(api));
-            const json = await resp.json();
-            const data = JSON.parse(json.contents);
-            const items = data.features;
+    function setupSelectors() {
+        for (let i = 1; i <= 4; i++) {
+            const sel = document.getElementById('sel-' + i);
+            const defaultId = defaults[i];
 
-            let waterRows = "";
-            const mainLocs = ["Harlingen", "West-Terschelling", "Vlieland", "Nes", "Lauwersoog", "Delfzijl"];
-
-            items.forEach(item => {
-                const p = item.properties;
-                const name = p.LOCATIE_NAAM;
-                const val = p.NUMERIEKEWAARDE;
-                const param = p.PARAMETER_WAT_OMSCHRIJVING;
-
-                // Update Weer-tabel voor geselecteerde plek
-                if (name.includes(selectedLoc)) {
-                    if (param.includes("Temperatuur")) document.getElementById('w-temp').innerHTML = val + " °C";
-                    if (param.includes("Windsnelheid")) document.getElementById('w-wind').innerHTML = (val * 1.94).toFixed(1) + " kn";
-                    if (param.includes("Windstoot")) document.getElementById('w-gust').innerHTML = (val * 1.94).toFixed(1) + " kn";
-                    if (param.includes("Luchtdruk")) document.getElementById('w-pres').innerHTML = val + " hPa";
-                    if (param.includes("Zicht")) document.getElementById('w-vis').innerHTML = val + " m";
+            camList.forEach(cam => {
+                const opt = document.createElement('option');
+                opt.value = cam.id;
+                if (cam.id === defaultId) {
+                    opt.text = "★ " + cam.name;
+                    opt.style.color = "#ff4444";
+                } else {
+                    opt.text = cam.name;
                 }
-
-                // Vul Waterhoogte lijst
-                if (mainLocs.includes(name) && param === "Waterhoogte") {
-                    waterRows += `<tr><td class="label">${name}</td><td class="value">${val}</td></tr>`;
-                }
+                sel.add(opt);
             });
-
-            waterList.innerHTML = waterRows;
-
-        } catch (e) {
-            console.error("Fout:", e);
         }
     }
 
-    fetchRWS();
-    setInterval(fetchRWS, 300000); // 5 min
-</script>
+    function changeCam(pos) {
+        const sel = document.getElementById('sel-' + pos);
+        const id = sel.value;
+        const name = sel.options[sel.selectedIndex].text.replace("★ ", "");
+        setCamera(pos, id, name);
+    }
 
+    function setCamera(pos, id, name) {
+        const container = document.getElementById('cont-' + pos);
+        document.getElementById('lbl-' + pos).innerText = name;
+        document.getElementById('sel-' + pos).value = id;
+        container.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&rel=0" allow="autoplay; allowfullscreen"></iframe>`;
+    }
+
+    function hardReset() {
+        for (let pos in defaults) {
+            const id = defaults[pos];
+            const camObj = camList.find(c => c.id === id);
+            setCamera(pos, id, camObj ? camObj.name : "Camera");
+        }
+        verversKNMI();
+    }
+
+    function verversKNMI() {
+        const nu = new Date();
+        const t = nu.getTime();
+        
+        // Update de afbeeldingen met cache-buster
+        document.getElementById('knmi-1').src = "https://cdn.knmi.nl/knmi/map/page/weer/waarschuwingen_verwachtingen/kust-en-noordzee/northseamap.png?t=" + t;
+        document.getElementById('knmi-2').src = "https://cdn.knmi.nl/knmi/map/page/weer/waarschuwingen_verwachtingen/kust-en-noordzee/waarschuwing_kust_0.gif?t=" + t;
+        
+        // Update de tijdstempel tekst
+        const tijdStr = nu.getHours().toString().padStart(2, '0') + ":" + 
+                        nu.getMinutes().toString().padStart(2, '0') + ":" + 
+                        nu.getSeconds().toString().padStart(2, '0');
+        
+        document.getElementById('last-update').innerText = "Laatste fetch: " + tijdStr;
+    }
+</script>
 </body>
 </html>
