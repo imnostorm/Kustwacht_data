@@ -3,108 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kustwacht Data - Live Waterstanden</title>
+    <title>Maritiem Dashboard NL</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background-color: #f4f7f9; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #003e7e; text-align: center; border-bottom: 2px solid #007dc5; padding-bottom: 10px; }
-        #status { text-align: center; padding: 10px; margin-bottom: 20px; font-weight: bold; border-radius: 5px; }
-        .loading { background: #fff3cd; color: #856404; }
-        .success { background: #d4edda; color: #155724; }
-        .error { background: #f8d7da; color: #721c24; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background-color: #007dc5; color: white; cursor: pointer; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        .waarde { font-weight: bold; color: #0056b3; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; background-color: #0b1e33; color: #fff; }
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 15px; }
+        
+        .panel { background: #1a2e44; border: 1px solid #007dc5; border-radius: 8px; padding: 15px; overflow: hidden; }
+        .panel h2 { color: #00d4ff; margin-top: 0; font-size: 1.2rem; border-bottom: 1px solid #334a66; padding-bottom: 10px; }
+        
+        /* Kaarten en Berichten */
+        iframe { width: 100%; height: 450px; border: none; background: white; border-radius: 4px; }
+        .weather-reports { height: 300px; overflow-y: auto; background: #000; color: #0f0; padding: 10px; font-family: monospace; font-size: 0.85rem; }
+        
+        /* Data Tabel */
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { background: #007dc5; text-align: left; padding: 8px; }
+        td { padding: 8px; border-bottom: 1px solid #334a66; }
+        .location-select { width: 100%; padding: 8px; margin-bottom: 10px; background: #0b1e33; color: white; border: 1px solid #00d4ff; }
+        
+        .value { color: #00d4ff; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Live Waterstanden Waddenzee & Kust</h1>
-    <div id="status" class="loading">Data wordt opgehaald uit Rijkswaterstaat Wadar...</div>
-    
-    <table id="data-tabel">
-        <thead>
-            <tr>
-                <th>Locatie</th>
-                <th>Meting</th>
-                <th>Waarde (cm)</th>
-                <th>Tijd</th>
-            </tr>
-        </thead>
-        <tbody id="data-body"></tbody>
-    </table>
+<h1 style="text-align:center; color: #00d4ff;">Maritiem Operationeel Dashboard</h1>
+
+<div class="dashboard">
+
+    <div class="panel">
+        <h2>KNMI Waarschuwingen Kust & Binnenwater</h2>
+        <iframe src="https://www.knmi.nl/nederland-nu/weer/waarschuwingen/overzicht"></iframe>
+    </div>
+
+    <div class="panel">
+        <h2>KNMI Waarschuwingen Noordzee</h2>
+        <iframe src="https://www.knmi.nl/nederland-nu/weer/waarschuwingen-noordzee"></iframe>
+    </div>
+
+    <div class="panel">
+        <h2>Officiële Berichten</h2>
+        <select class="location-select" onchange="document.getElementById('report-frame').src = this.value">
+            <option value="https://www.knmi.nl/nederland-nu/scheepvaart/marifoonbericht">Marifoonbericht</option>
+            <option value="https://www.knmi.nl/nederland-nu/scheepvaart/scheepvaartbericht">Scheepvaartbericht</option>
+        </select>
+        <iframe id="report-frame" src="https://www.knmi.nl/nederland-nu/scheepvaart/marifoonbericht" style="height: 350px;"></iframe>
+    </div>
+
+    <div class="panel">
+        <h2>Live Meetgegevens (RWS)</h2>
+        <select id="locatie-kiezer" class="location-select" onchange="updateDashboardData()">
+            <option value="HARLNG">Harlingen</option>
+            <option value="DENHLDR">Den Helder</option>
+            <option value="WESTTS">West-Terschelling</option>
+            <option value="VLIES">Vlieland</option>
+            <option value="LAUWOG">Lauwersoog</option>
+        </select>
+        
+        <table>
+            <tr><td>Waterhoogte (Huidig)</td><td class="value" id="val-water-nu">Laden...</td></tr>
+            <tr><td>Astronomisch</td><td class="value" id="val-water-astro">--</td></tr>
+            <tr><td>Afwijking (Opzet)</td><td class="value" id="val-water-afw">--</td></tr>
+            <tr><td>Luchttemperatuur</td><td class="value" id="val-temp">--</td></tr>
+            <tr><td>Wind</td><td class="value" id="val-wind">--</td></tr>
+            <tr><td>Golfhoogte</td><td class="value" id="val-golf">--</td></tr>
+        </table>
+    </div>
+
 </div>
 
 <script>
-    // Dit is de directe 'Waddendata' methode: We vragen specifiek om de laatste metingen
-    async function getWaterData() {
-        const statusDiv = document.getElementById('status');
-        const body = document.getElementById('data-body');
-        
-        // De API URL van de nieuwe RWS omgeving (Wadar)
-        const apiUrl = "https://ddapi20-waterwebservices.rijkswaterstaat.nl/ONLINEWAARNEMINGENSERVICES/OphalenLaatsteWaarnemingen";
-        
-        // We vragen specifiek om Waterhoogte (WATHTE) in Oppervlaktewater (OW)
-        const requestBody = {
-            "AquoPlusWaarnemingMetadataLijst": [{
-                "AquoMetadata": {
-                    "Compartiment": { "Code": "OW" },
-                    "Grootheid": { "Code": "WATHTE" }
-                }
-            }],
-            "LocatieLijst": [
-                {"Code": "harling"}, {"Code": "denhldr"}, {"Code": "terschlglw"}, 
-                {"Code": "vlielndnh"}, {"Code": "nes"}, {"Code": "lauwoog"}, 
-                {"Code": "delfzjl"}, {"Code": "huibertgt"}, {"Code": "eemshvn"}
-            ]
-        };
+    // Proxy om CORS te omzeilen
+    const proxy = "https://api.allorigins.win/get?url=";
 
+    async function updateDashboardData() {
+        const loc = document.getElementById('locatie-kiezer').value;
+        const status = document.getElementById('val-water-nu');
+        status.innerHTML = "Laden...";
+
+        // Voorbeeld link voor Waterhoogte via WFS
+        const rwsUrl = `https://geo.rijkswaterstaat.nl/services/ogc/hws/DDAPI20/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=locatiesmetlaatstewaarneming&outputFormat=application/json&cql_filter=LOCATIE_NAAM%20LIKE%20'%25${loc}%25'`;
+        
         try {
-            // We gebruiken een simpele proxy om de browser-beveiliging te passeren
-            const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(apiUrl);
+            const res = await fetch(proxy + encodeURIComponent(rwsUrl));
+            const wrapper = await res.json();
+            const data = JSON.parse(wrapper.contents);
             
-            const response = await fetch(proxyUrl, {
-                method: 'GET' // AllOrigins werkt het best met GET voor snelle data
-            });
-
-            const wrapper = await response.json();
-            // In de nieuwe Wadar API moeten we de POST request simuleren via de URL of proxy
-            // Omdat POST via proxy lastig is voor een leek, gebruiken we de WFS fallback die WEL werkt:
-            
-            const directUrl = "https://geo.rijkswaterstaat.nl/services/ogc/hws/DDAPI20/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=locatiesmetlaatstewaarneming&outputFormat=application/json&maxFeatures=50&cql_filter=COMPARTIMENT_OMSCHRIJVING='Waddenzee'";
-            const finalProxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(directUrl);
-            
-            const finalRes = await fetch(finalProxy);
-            const finalData = await finalRes.json();
-            const features = JSON.parse(finalData.contents).features;
-
-            let html = '';
-            features.forEach(f => {
+            // We zoeken de juiste waarden in de lijst
+            data.features.forEach(f => {
                 const p = f.properties;
-                const tijd = new Date(p.WAARNEMINGSTIJDSTIP).toLocaleTimeString('nl-NL', {hour: '2-digit', minute:'2-digit'});
-                html += `<tr>
-                    <td>${p.LOCATIE_NAAM}</td>
-                    <td>Waterhoogte</td>
-                    <td class="waarde">${p.NUMERIEKEWAARDE}</td>
-                    <td>${tijd}</td>
-                </tr>`;
+                if(p.PARAMETER_WAT_OMSCHRIJVING.includes("Waterhoogte")) {
+                    document.getElementById('val-water-nu').innerHTML = p.NUMERIEKEWAARDE + " cm";
+                }
+                if(p.PARAMETER_WAT_OMSCHRIJVING.includes("Wind")) {
+                    document.getElementById('val-wind').innerHTML = p.NUMERIEKEWAARDE + " m/s";
+                }
             });
-
-            body.innerHTML = html;
-            statusDiv.className = "success";
-            statusDiv.innerHTML = "Update succesvol: " + new Date().toLocaleTimeString('nl-NL');
-
-        } catch (error) {
-            statusDiv.className = "error";
-            statusDiv.innerHTML = "Fout: " + error.message;
+            
+        } catch (e) {
+            console.error(e);
+            status.innerHTML = "Fout";
         }
     }
 
-    getWaterData();
-    setInterval(getWaterData, 300000); // Elke 5 minuten verversen
+    // Initialiseer data
+    updateDashboardData();
 </script>
 
 </body>
