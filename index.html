@@ -107,7 +107,7 @@
         }
 
         .knmi-card { height: 26%; }
-        .radar-card { height: 42%; background: #000; }
+        .radar-card { height: 42%; }
 
         .timestamp {
             font-size: 10px;
@@ -177,8 +177,8 @@
                 <img id="knmi-2" src="">
             </div>
             <div class="slot radar-card">
-                <span class="label">Buienradar</span>
-                <iframe src="https://gadgets.buienradar.nl/gadget/zoommap/?lat=52.1&lon=5.2&zoom=7&size=2&voor=1" scrolling="no" style="width:100%; height:100%; border:none;"></iframe>
+                <span class="label">Actuele Neerslag (NL)</span>
+                <img id="radar-img" src="" style="object-fit: cover;">
             </div>
             <div id="last-update" class="timestamp">Laatste fetch: --:--:--</div>
         </div>
@@ -217,7 +217,8 @@
     document.addEventListener('DOMContentLoaded', () => {
         setupSelectors();
         hardReset();
-        setInterval(verversKNMI, 600000); 
+        // Update alle kaarten elke 10 minuten
+        setInterval(verversKaarten, 600000); 
     });
 
     function setupSelectors() {
@@ -254,15 +255,19 @@
             const camObj = camList.find(c => c.id === id);
             setCamera(pos, id, camObj ? camObj.name : "Camera");
         }
-        verversKNMI();
+        verversKaarten();
     }
 
-    function verversKNMI() {
+    function verversKaarten() {
         const nu = new Date();
         const t = nu.getTime();
         
+        // KNMI Kaarten
         document.getElementById('knmi-1').src = "https://cdn.knmi.nl/knmi/map/page/weer/waarschuwingen_verwachtingen/kust-en-noordzee/northseamap.png?t=" + t;
         document.getElementById('knmi-2').src = "https://cdn.knmi.nl/knmi/map/page/weer/waarschuwingen_verwachtingen/kust-en-noordzee/waarschuwing_kust_0.gif?t=" + t;
+        
+        // Directe Neerslagkaart (strakke afbeelding zonder interface)
+        document.getElementById('radar-img').src = "https://api.buienradar.nl/image/1.0/RadarMapNL?w=350&h=350&t=" + t;
         
         const tijdStr = nu.getHours().toString().padStart(2, '0') + ":" + 
                         nu.getMinutes().toString().padStart(2, '0') + ":" + 
